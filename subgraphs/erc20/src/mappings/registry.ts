@@ -48,6 +48,10 @@ export function createToken(value: JSONValue, userData: Value): void {
       token.totalSupply = BIGINT_ZERO;
       token.totalBurned = BIGINT_ZERO;
       token.totalMinted = BIGINT_ZERO;
+      token.lzTotalBridgedInCount = BIGINT_ZERO;
+      token.lzTotalBridgedIn = BIGINT_ZERO;
+      token.lzTotalBridgedOutCount = BIGINT_ZERO;
+      token.lzTotalBridgedOut = BIGINT_ZERO;
 
       log.debug("Adding token to registry, symbol: {}, address: {}", [
         token.symbol,

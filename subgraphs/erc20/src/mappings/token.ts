@@ -1,10 +1,18 @@
-import { Bytes, BigInt, ethereum, log, json, Value } from "@graphprotocol/graph-ts";
+import {
+  Bytes,
+  BigInt,
+  ethereum,
+  log,
+  json,
+  Value,
+} from "@graphprotocol/graph-ts";
 
 import { ERC20, Transfer } from "../../generated/StandardToken/ERC20";
 import { Burn } from "../../generated/BurnableToken/Burnable";
 import { Mint } from "../../generated/MintableToken/Mintable";
 
 import {
+  BridgeTransferEvent,
   Token,
   TokenDailySnapshot,
   TokenHourlySnapshot,
@@ -29,14 +37,18 @@ import {
   updateAccountBalanceDailySnapshot,
 } from "./account";
 import { createToken } from "./registry";
+import {
+  ReceiveFromChain,
+  SendToChain,
+} from "../../generated/OmnichainToken/OFTV2";
 
 function loadToken(address: string): Token {
   let token = Token.load(address);
 
-  if(token == null){
-    let value = json.fromString(`["${address}", ""]`)
-    createToken(value, Value.fromString(""))
-    token = Token.load(address)
+  if (token == null) {
+    let value = json.fromString(`["${address}", ""]`);
+    createToken(value, Value.fromString(""));
+    token = Token.load(address);
   }
 
   return token!;
@@ -75,7 +87,7 @@ export function handleTransfer(event: Transfer): void {
         token,
         amount,
         event.params.from,
-        event
+        event,
       );
     } else if (isMint) {
       isEventProcessed = handleMintEvent(token, amount, event.params.to, event);
@@ -86,7 +98,7 @@ export function handleTransfer(event: Transfer): void {
         amount,
         event.params.from,
         event.params.to,
-        event
+        event,
       );
     }
 
@@ -100,7 +112,7 @@ export function handleTransfer(event: Transfer): void {
       let accountBalance = decreaseAccountBalance(
         sourceAccount,
         token as Token,
-        amount
+        amount,
       );
       accountBalance.blockNumber = event.block.number;
       accountBalance.timestamp = event.block.timestamp;
@@ -118,7 +130,7 @@ export function handleTransfer(event: Transfer): void {
       let accountBalance = increaseAccountBalance(
         destinationAccount,
         token as Token,
-        amount
+        amount,
       );
       accountBalance.blockNumber = event.block.number;
       accountBalance.timestamp = event.block.timestamp;
@@ -142,7 +154,7 @@ export function handleBurn(event: Burn): void {
       token,
       amount,
       event.params.burner,
-      event
+      event,
     );
     if (isEventProcessed) {
       return;
@@ -154,7 +166,7 @@ export function handleBurn(event: Burn): void {
     let accountBalance = decreaseAccountBalance(
       account,
       token as Token,
-      amount
+      amount,
     );
     accountBalance.blockNumber = event.block.number;
     accountBalance.timestamp = event.block.timestamp;
@@ -177,7 +189,7 @@ export function handleMint(event: Mint): void {
       token,
       amount,
       event.params.to,
-      event
+      event,
     );
     if (isEventProcessed) {
       return;
@@ -189,7 +201,7 @@ export function handleMint(event: Mint): void {
     let accountBalance = increaseAccountBalance(
       account,
       token as Token,
-      amount
+      amount,
     );
     accountBalance.blockNumber = event.block.number;
     accountBalance.timestamp = event.block.timestamp;
@@ -206,7 +218,7 @@ function handleBurnEvent(
   token: Token | null,
   amount: BigInt,
   burner: Bytes,
-  event: ethereum.Event
+  event: ethereum.Event,
 ): boolean {
   // Track total supply/burned
   if (token != null) {
@@ -251,7 +263,7 @@ function handleMintEvent(
   token: Token | null,
   amount: BigInt,
   destination: Bytes,
-  event: ethereum.Event
+  event: ethereum.Event,
 ): boolean {
   // Track total token supply/minted
   if (token != null) {
@@ -298,14 +310,14 @@ function handleTransferEvent(
   amount: BigInt,
   source: Bytes,
   destination: Bytes,
-  event: ethereum.Event
+  event: ethereum.Event,
 ): TransferEvent {
   let transferEvent = new TransferEvent(
     event.address.toHex() +
       "-" +
       event.transaction.hash.toHex() +
       "-" +
-      event.logIndex.toString()
+      event.logIndex.toString(),
   );
   transferEvent.hash = event.transaction.hash.toHex();
   transferEvent.logIndex = event.logIndex.toI32();
@@ -333,7 +345,7 @@ function handleTransferEvent(
     if (isNewAccount(destination)) {
       toAddressIsNewHolderNum = BIGINT_ONE;
     }
-    balance = getOrCreateAccountBalance(getOrCreateAccount(destination),token);
+    balance = getOrCreateAccountBalance(getOrCreateAccount(destination), token);
     if (balance.amount == BIGINT_ZERO) {
       // It means the receiver's token balance is 0 before transferal.
       toBalanceIsZeroNum = BIGINT_ONE;
@@ -343,7 +355,7 @@ function handleTransferEvent(
       .minus(FromBalanceToZeroNum)
       .plus(toBalanceIsZeroNum);
     token.cumulativeHolderCount = token.cumulativeHolderCount.plus(
-      toAddressIsNewHolderNum
+      toAddressIsNewHolderNum,
     );
     token.transferCount = token.transferCount.plus(BIGINT_ONE);
 
@@ -383,7 +395,7 @@ function handleTransferEvent(
 
 function getOrCreateTokenDailySnapshot(
   token: Token,
-  block: ethereum.Block
+  block: ethereum.Block,
 ): TokenDailySnapshot {
   let snapshotId =
     token.id + "-" + (block.timestamp.toI64() / SECONDS_PER_DAY).toString();
@@ -405,13 +417,17 @@ function getOrCreateTokenDailySnapshot(
   newSnapshot.dailyMintAmount = BIGINT_ZERO;
   newSnapshot.dailyBurnCount = 0;
   newSnapshot.dailyBurnAmount = BIGINT_ZERO;
+  newSnapshot.dailyLzTotalBridgedInCount = 0;
+  newSnapshot.dailyLzTotalBridgedIn = BIGINT_ZERO;
+  newSnapshot.dailyLzTotalBridgedOutCount = 0;
+  newSnapshot.dailyLzTotalBridgedOut = BIGINT_ZERO;
 
   return newSnapshot;
 }
 
 function getOrCreateTokenHourlySnapshot(
   token: Token,
-  block: ethereum.Block
+  block: ethereum.Block,
 ): TokenHourlySnapshot {
   let snapshotId =
     token.id + "-" + (block.timestamp.toI64() / SECONDS_PER_HOUR).toString();
@@ -434,6 +450,96 @@ function getOrCreateTokenHourlySnapshot(
   newSnapshot.hourlyMintAmount = BIGINT_ZERO;
   newSnapshot.hourlyBurnCount = 0;
   newSnapshot.hourlyBurnAmount = BIGINT_ZERO;
+  newSnapshot.hourlyLzTotalBridgedInCount = 0;
+  newSnapshot.hourlyLzTotalBridgedIn = BIGINT_ZERO;
+  newSnapshot.hourlyLzTotalBridgedOutCount = 0;
+  newSnapshot.hourlyLzTotalBridgedOut = BIGINT_ZERO;
 
   return newSnapshot;
+}
+
+function handleSendToChain(event: SendToChain): void {
+  // let token = loadToken(event.address.toHex());
+  //
+  // // bridge event
+  // let bridgeEvent = new BridgeTransferEvent(
+  //   event.address.toHex() + "-" + event.transaction.hash.toHex() + "-" + event.logIndex.toString()
+  // )
+  // bridgeEvent.hash = event.transaction.hash.toHex();
+  // bridgeEvent.logIndex = event.logIndex.toI32();
+  // bridgeEvent.token = event.address.toHex();
+  // bridgeEvent.nonce = event.transaction.nonce.toI32();
+  // bridgeEvent.amount = event.params._amount;
+  // bridgeEvent.from = event.params._from.toHex();
+  // bridgeEvent.destinationChainId = event.params._dstChainId.toString();
+  // bridgeEvent.to = event.params._toAddress.toHex();
+  // bridgeEvent.blockNumber = event.block.number;
+  // bridgeEvent.timestamp = event.block.timestamp;
+  // bridgeEvent.save();
+  //
+  // if (token != null) {
+  //   let amount = event.params._amount;
+  //
+  //   // update token details
+  //   token.lzTotalBridgedOutCount = token.lzTotalBridgedOutCount.plus(BIGINT_ONE);
+  //   token.lzTotalBridgedOut = token.lzTotalBridgedOut.plus(amount);
+  //
+  //   // update daily snapshot
+  //   let dailySnapshot = getOrCreateTokenDailySnapshot(token, event.block);
+  //   dailySnapshot.dailyLzTotalBridgedOutCount += 1;
+  //   dailySnapshot.dailyLzTotalBridgedOut = dailySnapshot.dailyLzTotalBridgedOut.plus(amount);
+  //
+  //   // update hourly snapshot
+  //   let hourlySnapshot = getOrCreateTokenHourlySnapshot(token, event.block);
+  //   hourlySnapshot.hourlyLzTotalBridgedOutCount += 1;
+  //   hourlySnapshot.hourlyLzTotalBridgedOut = hourlySnapshot.hourlyLzTotalBridgedOut.plus(amount);
+  //
+  //   // save
+  //   token.save();
+  //   dailySnapshot.save();
+  //   hourlySnapshot.save();
+  // }
+}
+
+function handleReceiveFromChain(event: ReceiveFromChain): void {
+  // let token = loadToken(event.address.toHex());
+  //
+  // // bridge event
+  // let bridgeEvent = new BridgeTransferEvent(
+  //   event.address.toHex() + "-" + event.transaction.hash.toHex() + "-" + event.logIndex.toString()
+  // )
+  // bridgeEvent.hash = event.transaction.hash.toHex();
+  // bridgeEvent.logIndex = event.logIndex.toI32();
+  // bridgeEvent.token = event.address.toHex();
+  // bridgeEvent.nonce = event.transaction.nonce.toI32();
+  // bridgeEvent.amount = event.params._amount;
+  // bridgeEvent.sourceChainId = event.params._srcChainId.toString();
+  // bridgeEvent.to = event.params._to.toHex();
+  // bridgeEvent.blockNumber = event.block.number;
+  // bridgeEvent.timestamp = event.block.timestamp;
+  //
+  // bridgeEvent.save();
+  //
+  // if (token != null) {
+  //   let amount = event.params._amount;
+  //
+  //   // update token details
+  //   token.lzTotalBridgedInCount = token.lzTotalBridgedInCount.plus(BIGINT_ONE);
+  //   token.lzTotalBridgedIn = token.lzTotalBridgedIn.plus(amount);
+  //
+  //   // update daily snapshot
+  //   let dailySnapshot = getOrCreateTokenDailySnapshot(token, event.block);
+  //   dailySnapshot.dailyLzTotalBridgedInCount += 1;
+  //   dailySnapshot.dailyLzTotalBridgedIn = dailySnapshot.dailyLzTotalBridgedIn.plus(amount);
+  //
+  //   // update hourly snapshot
+  //   let hourlySnapshot = getOrCreateTokenHourlySnapshot(token, event.block);
+  //   hourlySnapshot.hourlyLzTotalBridgedInCount += 1;
+  //   hourlySnapshot.hourlyLzTotalBridgedIn = hourlySnapshot.hourlyLzTotalBridgedIn.plus(amount);
+  //
+  //   // save
+  //   token.save();
+  //   dailySnapshot.save();
+  //   hourlySnapshot.save();
+  // }
 }
