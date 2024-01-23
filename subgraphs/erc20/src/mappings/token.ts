@@ -494,12 +494,16 @@ export function handleSendToChain(event: SendToChain): void {
     dailySnapshot.dailyLzTotalBridgedOutCount += 1;
     dailySnapshot.dailyLzTotalBridgedOut =
       dailySnapshot.dailyLzTotalBridgedOut.plus(amount);
+    dailySnapshot.blockNumber = event.block.number;
+    dailySnapshot.timestamp = event.block.timestamp;
 
     // update hourly snapshot
     let hourlySnapshot = getOrCreateTokenHourlySnapshot(token, event.block);
     hourlySnapshot.hourlyLzTotalBridgedOutCount += 1;
     hourlySnapshot.hourlyLzTotalBridgedOut =
       hourlySnapshot.hourlyLzTotalBridgedOut.plus(amount);
+    hourlySnapshot.blockNumber = event.block.number;
+    hourlySnapshot.timestamp = event.block.timestamp;
 
     // save
     token.save();
@@ -543,12 +547,16 @@ export function handleReceiveFromChain(event: ReceiveFromChain): void {
     dailySnapshot.dailyLzTotalBridgedInCount += 1;
     dailySnapshot.dailyLzTotalBridgedIn =
       dailySnapshot.dailyLzTotalBridgedIn.plus(amount);
+    dailySnapshot.blockNumber = event.block.number;
+    dailySnapshot.timestamp = event.block.timestamp;
 
     // update hourly snapshot
     let hourlySnapshot = getOrCreateTokenHourlySnapshot(token, event.block);
     hourlySnapshot.hourlyLzTotalBridgedInCount += 1;
     hourlySnapshot.hourlyLzTotalBridgedIn =
       hourlySnapshot.hourlyLzTotalBridgedIn.plus(amount);
+    hourlySnapshot.blockNumber = event.block.number;
+    hourlySnapshot.timestamp = event.block.timestamp;
 
     // save
     token.save();
