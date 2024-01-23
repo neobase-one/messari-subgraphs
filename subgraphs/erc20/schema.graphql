@@ -54,8 +54,8 @@ type Token @entity {
   " Total bridged out "
   lzTotalBridgedOut: BigInt!
 
-  #  " List of bridge transfers"
-  #  lzBridges: [BridgeTransferEvent!]! @derivedFrom(field: "token")
+  " List of bridge transfers"
+  lzBridges: [BridgeTransferEvent!]! @derivedFrom(field: "token")
 
   " List of token transfers "
   transfers: [TransferEvent!]! @derivedFrom(field: "token")
@@ -303,11 +303,11 @@ type Account @entity {
   " Token transfers from this account "
   transferFrom: [TransferEvent!]! @derivedFrom(field: "from")
 
-  #  " Bridge in transfers to this account "
-  #  bridgeTo: [BridgeTransferEvent!]! @derivedFrom(field: "to")
-  #
-  #  " Bridge out transfers from this account "
-  #  bridgeFrom: [BridgeTransferEvent!]! @derivedFrom(field: "from")
+  " Bridge in transfers to this account "
+  bridgeTo: [BridgeTransferEvent!]! @derivedFrom(field: "to")
+
+  " Bridge out transfers from this account "
+  bridgeFrom: [BridgeTransferEvent!]! @derivedFrom(field: "from")
 
   " Token balances that this account holds "
   balances: [AccountBalance!]! @derivedFrom(field: "account")

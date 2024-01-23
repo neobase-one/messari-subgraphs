@@ -458,88 +458,101 @@ function getOrCreateTokenHourlySnapshot(
   return newSnapshot;
 }
 
-function handleSendToChain(event: SendToChain): void {
-  // let token = loadToken(event.address.toHex());
-  //
-  // // bridge event
-  // let bridgeEvent = new BridgeTransferEvent(
-  //   event.address.toHex() + "-" + event.transaction.hash.toHex() + "-" + event.logIndex.toString()
-  // )
-  // bridgeEvent.hash = event.transaction.hash.toHex();
-  // bridgeEvent.logIndex = event.logIndex.toI32();
-  // bridgeEvent.token = event.address.toHex();
-  // bridgeEvent.nonce = event.transaction.nonce.toI32();
-  // bridgeEvent.amount = event.params._amount;
-  // bridgeEvent.from = event.params._from.toHex();
-  // bridgeEvent.destinationChainId = event.params._dstChainId.toString();
-  // bridgeEvent.to = event.params._toAddress.toHex();
-  // bridgeEvent.blockNumber = event.block.number;
-  // bridgeEvent.timestamp = event.block.timestamp;
-  // bridgeEvent.save();
-  //
-  // if (token != null) {
-  //   let amount = event.params._amount;
-  //
-  //   // update token details
-  //   token.lzTotalBridgedOutCount = token.lzTotalBridgedOutCount.plus(BIGINT_ONE);
-  //   token.lzTotalBridgedOut = token.lzTotalBridgedOut.plus(amount);
-  //
-  //   // update daily snapshot
-  //   let dailySnapshot = getOrCreateTokenDailySnapshot(token, event.block);
-  //   dailySnapshot.dailyLzTotalBridgedOutCount += 1;
-  //   dailySnapshot.dailyLzTotalBridgedOut = dailySnapshot.dailyLzTotalBridgedOut.plus(amount);
-  //
-  //   // update hourly snapshot
-  //   let hourlySnapshot = getOrCreateTokenHourlySnapshot(token, event.block);
-  //   hourlySnapshot.hourlyLzTotalBridgedOutCount += 1;
-  //   hourlySnapshot.hourlyLzTotalBridgedOut = hourlySnapshot.hourlyLzTotalBridgedOut.plus(amount);
-  //
-  //   // save
-  //   token.save();
-  //   dailySnapshot.save();
-  //   hourlySnapshot.save();
-  // }
+export function handleSendToChain(event: SendToChain): void {
+  let token = loadToken(event.address.toHex());
+
+  // bridge event
+  let bridgeEvent = new BridgeTransferEvent(
+    event.address.toHex() +
+      "-" +
+      event.transaction.hash.toHex() +
+      "-" +
+      event.logIndex.toString(),
+  );
+  bridgeEvent.hash = event.transaction.hash.toHex();
+  bridgeEvent.logIndex = event.logIndex.toI32();
+  bridgeEvent.token = event.address.toHex();
+  bridgeEvent.nonce = event.transaction.nonce.toI32();
+  bridgeEvent.amount = event.params._amount;
+  bridgeEvent.from = event.params._from.toHex();
+  bridgeEvent.destinationChainId = event.params._dstChainId.toString();
+  bridgeEvent.to = event.params._toAddress.toHex();
+  bridgeEvent.blockNumber = event.block.number;
+  bridgeEvent.timestamp = event.block.timestamp;
+  bridgeEvent.save();
+
+  if (token != null) {
+    let amount = event.params._amount;
+
+    // update token details
+    token.lzTotalBridgedOutCount =
+      token.lzTotalBridgedOutCount.plus(BIGINT_ONE);
+    token.lzTotalBridgedOut = token.lzTotalBridgedOut.plus(amount);
+
+    // update daily snapshot
+    let dailySnapshot = getOrCreateTokenDailySnapshot(token, event.block);
+    dailySnapshot.dailyLzTotalBridgedOutCount += 1;
+    dailySnapshot.dailyLzTotalBridgedOut =
+      dailySnapshot.dailyLzTotalBridgedOut.plus(amount);
+
+    // update hourly snapshot
+    let hourlySnapshot = getOrCreateTokenHourlySnapshot(token, event.block);
+    hourlySnapshot.hourlyLzTotalBridgedOutCount += 1;
+    hourlySnapshot.hourlyLzTotalBridgedOut =
+      hourlySnapshot.hourlyLzTotalBridgedOut.plus(amount);
+
+    // save
+    token.save();
+    dailySnapshot.save();
+    hourlySnapshot.save();
+  }
 }
 
-function handleReceiveFromChain(event: ReceiveFromChain): void {
-  // let token = loadToken(event.address.toHex());
-  //
-  // // bridge event
-  // let bridgeEvent = new BridgeTransferEvent(
-  //   event.address.toHex() + "-" + event.transaction.hash.toHex() + "-" + event.logIndex.toString()
-  // )
-  // bridgeEvent.hash = event.transaction.hash.toHex();
-  // bridgeEvent.logIndex = event.logIndex.toI32();
-  // bridgeEvent.token = event.address.toHex();
-  // bridgeEvent.nonce = event.transaction.nonce.toI32();
-  // bridgeEvent.amount = event.params._amount;
-  // bridgeEvent.sourceChainId = event.params._srcChainId.toString();
-  // bridgeEvent.to = event.params._to.toHex();
-  // bridgeEvent.blockNumber = event.block.number;
-  // bridgeEvent.timestamp = event.block.timestamp;
-  //
-  // bridgeEvent.save();
-  //
-  // if (token != null) {
-  //   let amount = event.params._amount;
-  //
-  //   // update token details
-  //   token.lzTotalBridgedInCount = token.lzTotalBridgedInCount.plus(BIGINT_ONE);
-  //   token.lzTotalBridgedIn = token.lzTotalBridgedIn.plus(amount);
-  //
-  //   // update daily snapshot
-  //   let dailySnapshot = getOrCreateTokenDailySnapshot(token, event.block);
-  //   dailySnapshot.dailyLzTotalBridgedInCount += 1;
-  //   dailySnapshot.dailyLzTotalBridgedIn = dailySnapshot.dailyLzTotalBridgedIn.plus(amount);
-  //
-  //   // update hourly snapshot
-  //   let hourlySnapshot = getOrCreateTokenHourlySnapshot(token, event.block);
-  //   hourlySnapshot.hourlyLzTotalBridgedInCount += 1;
-  //   hourlySnapshot.hourlyLzTotalBridgedIn = hourlySnapshot.hourlyLzTotalBridgedIn.plus(amount);
-  //
-  //   // save
-  //   token.save();
-  //   dailySnapshot.save();
-  //   hourlySnapshot.save();
-  // }
+export function handleReceiveFromChain(event: ReceiveFromChain): void {
+  let token = loadToken(event.address.toHex());
+
+  // bridge event
+  let bridgeEvent = new BridgeTransferEvent(
+    event.address.toHex() +
+      "-" +
+      event.transaction.hash.toHex() +
+      "-" +
+      event.logIndex.toString(),
+  );
+  bridgeEvent.hash = event.transaction.hash.toHex();
+  bridgeEvent.logIndex = event.logIndex.toI32();
+  bridgeEvent.token = event.address.toHex();
+  bridgeEvent.nonce = event.transaction.nonce.toI32();
+  bridgeEvent.amount = event.params._amount;
+  bridgeEvent.sourceChainId = event.params._srcChainId.toString();
+  bridgeEvent.to = event.params._to.toHex();
+  bridgeEvent.blockNumber = event.block.number;
+  bridgeEvent.timestamp = event.block.timestamp;
+
+  bridgeEvent.save();
+
+  if (token != null) {
+    let amount = event.params._amount;
+
+    // update token details
+    token.lzTotalBridgedInCount = token.lzTotalBridgedInCount.plus(BIGINT_ONE);
+    token.lzTotalBridgedIn = token.lzTotalBridgedIn.plus(amount);
+
+    // update daily snapshot
+    let dailySnapshot = getOrCreateTokenDailySnapshot(token, event.block);
+    dailySnapshot.dailyLzTotalBridgedInCount += 1;
+    dailySnapshot.dailyLzTotalBridgedIn =
+      dailySnapshot.dailyLzTotalBridgedIn.plus(amount);
+
+    // update hourly snapshot
+    let hourlySnapshot = getOrCreateTokenHourlySnapshot(token, event.block);
+    hourlySnapshot.hourlyLzTotalBridgedInCount += 1;
+    hourlySnapshot.hourlyLzTotalBridgedIn =
+      hourlySnapshot.hourlyLzTotalBridgedIn.plus(amount);
+
+    // save
+    token.save();
+    dailySnapshot.save();
+    hourlySnapshot.save();
+  }
 }
