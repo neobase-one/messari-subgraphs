@@ -26,6 +26,7 @@ import {
   BIGINT_ZERO,
   BIGINT_ONE,
   DEFAULT_DECIMALS,
+  DEAD_ADDRESS,
 } from "../common/constants";
 
 import {
@@ -77,7 +78,9 @@ export function handleTransfer(event: Transfer): void {
     }
     let amount = event.params.value;
 
-    let isBurn = event.params.to.toHex() == GENESIS_ADDRESS;
+    let isBurn =
+      event.params.to.toHex() == GENESIS_ADDRESS ||
+      event.params.to.toHex() == DEAD_ADDRESS;
     let isMint = event.params.from.toHex() == GENESIS_ADDRESS;
     let isTransfer = !isBurn && !isMint;
     let isEventProcessed = false;
@@ -459,11 +462,17 @@ function getOrCreateTokenHourlySnapshot(
 }
 
 export function handleSendToChain(event: SendToChain): void {
-  let token = loadToken(event.address.toHex());
+  // handle for mainnet
+  let address = event.address.toHex();
+  if (address == "0xa0aa943666b4309c1989e3a7ebe7dbe11de36212") {
+    // ProxyOFT
+    address = "0x9e20461bc2c4c980f62f1b279d71734207a6a356"; // set it to ERC20 to match lz & erc20 metrics
+  }
+  let token = loadToken(address);
 
   // bridge event
   let bridgeEvent = new BridgeTransferEvent(
-    event.address.toHex() +
+    address +
       "-" +
       event.transaction.hash.toHex() +
       "-" +
@@ -513,11 +522,17 @@ export function handleSendToChain(event: SendToChain): void {
 }
 
 export function handleReceiveFromChain(event: ReceiveFromChain): void {
-  let token = loadToken(event.address.toHex());
+  // handle for mainnet
+  let address = event.address.toHex();
+  if (address == "0xa0aa943666b4309c1989e3a7ebe7dbe11de36212") {
+    // ProxyOFT
+    address = "0x9e20461bc2c4c980f62f1b279d71734207a6a356"; // set it to ERC20 to match lz & erc20 metrics
+  }
+  let token = loadToken(address);
 
   // bridge event
   let bridgeEvent = new BridgeTransferEvent(
-    event.address.toHex() +
+    address +
       "-" +
       event.transaction.hash.toHex() +
       "-" +
