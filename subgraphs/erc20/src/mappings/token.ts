@@ -56,7 +56,13 @@ function loadToken(address: string): Token {
 }
 
 export function handleTransfer(event: Transfer): void {
-  let token = loadToken(event.address.toHex());
+  // handle for mainnet
+  let address = event.address.toHex();
+  if (address == "0xa0aa943666b4309c1989e3a7ebe7dbe11de36212") {
+    // ProxyOFT
+    address = "0x9e20461bc2c4c980f62f1b279d71734207a6a356"; // set it to ERC20 to match lz & erc20 metrics
+  }
+  let token = loadToken(address);
 
   if (token != null) {
     if (token.name == "") {
@@ -148,7 +154,13 @@ export function handleTransfer(event: Transfer): void {
 }
 
 export function handleBurn(event: Burn): void {
-  let token = loadToken(event.address.toHex());
+  // handle for mainnet
+  let address = event.address.toHex();
+  if (address == "0xa0aa943666b4309c1989e3a7ebe7dbe11de36212") {
+    // ProxyOFT
+    address = "0x9e20461bc2c4c980f62f1b279d71734207a6a356"; // set it to ERC20 to match lz & erc20 metrics
+  }
+  let token = loadToken(address);
 
   if (token != null) {
     let amount = event.params.value;
@@ -183,7 +195,13 @@ export function handleBurn(event: Burn): void {
 }
 
 export function handleMint(event: Mint): void {
-  let token = loadToken(event.address.toHex());
+  // handle for mainnet
+  let address = event.address.toHex();
+  if (address == "0xa0aa943666b4309c1989e3a7ebe7dbe11de36212") {
+    // ProxyOFT
+    address = "0x9e20461bc2c4c980f62f1b279d71734207a6a356"; // set it to ERC20 to match lz & erc20 metrics
+  }
+  let token = loadToken(address);
 
   if (token != null) {
     let amount = event.params.amount;
