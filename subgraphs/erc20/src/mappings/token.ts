@@ -252,11 +252,23 @@ function handleBurnEvent(
     if (currentTotalSupply == token.totalSupply) {
       return true;
     }
+
+    let balance = getOrCreateAccountBalance(getOrCreateAccount(burner), token);
+    let FromBalanceToZeroNum = BIGINT_ZERO;
+    if (balance.amount == amount) {
+      // It means the sender's token balance will be 0 after transferal.
+      FromBalanceToZeroNum = BIGINT_ONE;
+    }
+
+    token.currentHolderCount =
+      token.currentHolderCount.minus(FromBalanceToZeroNum);
     token.totalSupply = token.totalSupply.minus(amount);
     token.burnCount = token.burnCount.plus(BIGINT_ONE);
     token.totalBurned = token.totalBurned.plus(amount);
 
     let dailySnapshot = getOrCreateTokenDailySnapshot(token, event.block);
+    dailySnapshot.currentHolderCount =
+      dailySnapshot.currentHolderCount.minus(FromBalanceToZeroNum);
     dailySnapshot.dailyTotalSupply = token.totalSupply;
     dailySnapshot.dailyEventCount += 1;
     dailySnapshot.dailyBurnCount += 1;
@@ -265,6 +277,8 @@ function handleBurnEvent(
     dailySnapshot.timestamp = event.block.timestamp;
 
     let hourlySnapshot = getOrCreateTokenHourlySnapshot(token, event.block);
+    hourlySnapshot.currentHolderCount =
+      hourlySnapshot.currentHolderCount.minus(FromBalanceToZeroNum);
     hourlySnapshot.hourlyTotalSupply = token.totalSupply;
     hourlySnapshot.hourlyEventCount += 1;
     hourlySnapshot.hourlyBurnCount += 1;
@@ -297,12 +311,28 @@ function handleMintEvent(
     if (currentTotalSupply == token.totalSupply) {
       return true;
     }
-    token.totalSupply = token.totalSupply.plus(amount);
 
+    let balance = getOrCreateAccountBalance(
+      getOrCreateAccount(destination),
+      token,
+    );
+    let toAddressIsNewHolderNum = BIGINT_ZERO;
+    if (balance.amount == BIGINT_ZERO) {
+      // It means the receiver's token balance is 0 before transferal.
+      toAddressIsNewHolderNum = BIGINT_ONE;
+    }
+
+    token.currentHolderCount = token.currentHolderCount.plus(
+      toAddressIsNewHolderNum,
+    );
+    token.totalSupply = token.totalSupply.plus(amount);
     token.mintCount = token.mintCount.plus(BIGINT_ONE);
     token.totalMinted = token.totalMinted.plus(amount);
 
     let dailySnapshot = getOrCreateTokenDailySnapshot(token, event.block);
+    dailySnapshot.currentHolderCount = dailySnapshot.currentHolderCount.minus(
+      toAddressIsNewHolderNum,
+    );
     dailySnapshot.dailyTotalSupply = token.totalSupply;
     dailySnapshot.dailyEventCount += 1;
     dailySnapshot.dailyMintCount += 1;
@@ -311,6 +341,9 @@ function handleMintEvent(
     dailySnapshot.timestamp = event.block.timestamp;
 
     let hourlySnapshot = getOrCreateTokenHourlySnapshot(token, event.block);
+    hourlySnapshot.currentHolderCount = hourlySnapshot.currentHolderCount.minus(
+      toAddressIsNewHolderNum,
+    );
     hourlySnapshot.hourlyTotalSupply = token.totalSupply;
     hourlySnapshot.hourlyEventCount += 1;
     hourlySnapshot.hourlyMintCount += 1;
