@@ -1,5 +1,6 @@
 Reference/
 .vscode/
+*~
 
 subgraph.yaml
 versions.ts

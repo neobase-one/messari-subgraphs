@@ -1,0 +1,102 @@
+specVersion: 0.0.4
+features:
+  - nonFatalErrors
+  - ipfsOnEthereumContracts
+schema:
+  file: ./schema.graphql
+dataSources:
+  - name: StandardToken
+    kind: ethereum/contract
+    network: bsc
+    source:
+      abi: ERC20
+      address: "0x9e20461bc2c4c980f62f1B279D71734207a6A356"
+      startBlock: 34537566
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/token.ts
+      entities:
+        - TransferEvent
+      abis:
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+  - name: BurnableToken
+    kind: ethereum/contract
+    network: bsc
+    source:
+      abi: Burnable
+      address: "0x9e20461bc2c4c980f62f1B279D71734207a6A356"
+      startBlock: 34537566
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/token.ts
+      entities:
+        - BurnEvent
+      abis:
+        - name: Burnable
+          file: ./abis/Burnable.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: Burn(indexed address,uint256)
+          handler: handleBurn
+  - name: MintableToken
+    kind: ethereum/contract
+    network: bsc
+    source:
+      abi: Mintable
+      address: "0x9e20461bc2c4c980f62f1B279D71734207a6A356"
+      startBlock: 34537566
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/token.ts
+      entities:
+        - MintEvent
+      abis:
+        - name: Mintable
+          file: ./abis/Mintable.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      eventHandlers:
+        - event: Mint(indexed address,uint256)
+          handler: handleMint
+  - name: OmnichainToken
+    kind: ethereum
+    network: bsc
+    source:
+      abi: OFTV2
+      address: "0x9e20461bc2c4c980f62f1B279D71734207a6A356"
+      startBlock: 34537566
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/mappings/token.ts
+      entities:
+        - Token
+        - TokenDailySnapshot
+        - TokenHourlySnapshot
+        - BridgeTransferEvent
+      abis:
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: Mintable
+          file: ./abis/Mintable.json
+        - name: Burnable
+          file: ./abis/Burnable.json
+        - name: OFTV2
+          file: ./abis/OFTV2.json
+      eventHandlers:
+        - event: SendToChain(indexed uint16,indexed address,indexed bytes32,uint256)
+          handler: handleSendToChain
+        - event: ReceiveFromChain(indexed uint16,indexed address,uint256)
+          handler: handleReceiveFromChain
