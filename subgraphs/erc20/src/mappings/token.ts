@@ -550,6 +550,15 @@ export function handleSendToChain(event: SendToChain): void {
     hourlySnapshot.blockNumber = event.block.number;
     hourlySnapshot.timestamp = event.block.timestamp;
 
+    // bridge out should not be considered as burn. Undo the burn updates made by transfer event
+    token.burnCount = token.burnCount.minus(BIGINT_ONE);
+    token.totalBurned = token.totalBurned.minus(amount);
+    dailySnapshot.dailyBurnCount -= 1;
+    dailySnapshot.dailyBurnAmount = dailySnapshot.dailyBurnAmount.minus(amount);
+    hourlySnapshot.hourlyBurnCount -= 1;
+    hourlySnapshot.hourlyBurnAmount =
+      hourlySnapshot.hourlyBurnAmount.minus(amount);
+
     // save
     token.save();
     dailySnapshot.save();
