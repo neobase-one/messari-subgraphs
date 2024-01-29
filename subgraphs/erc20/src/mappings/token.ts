@@ -1,11 +1,4 @@
-import {
-  Bytes,
-  BigInt,
-  ethereum,
-  log,
-  json,
-  Value,
-} from "@graphprotocol/graph-ts";
+import { Bytes, BigInt, ethereum, json, Value } from "@graphprotocol/graph-ts";
 
 import { ERC20, Transfer } from "../../generated/StandardToken/ERC20";
 import { Burn } from "../../generated/BurnableToken/Burnable";
@@ -27,6 +20,7 @@ import {
   BIGINT_ONE,
   DEFAULT_DECIMALS,
   DEAD_ADDRESS,
+  OFTV2_ADDRESS,
 } from "../common/constants";
 
 import {
@@ -56,13 +50,7 @@ function loadToken(address: string): Token {
 }
 
 export function handleTransfer(event: Transfer): void {
-  // handle for mainnet
-  let address = event.address.toHex();
-  if (address == "0xa0aa943666b4309c1989e3a7ebe7dbe11de36212") {
-    // ProxyOFT
-    address = "0x9e20461bc2c4c980f62f1b279d71734207a6a356"; // set it to ERC20 to match lz & erc20 metrics
-  }
-  let token = loadToken(address);
+  let token = loadToken(event.address.toHex());
 
   if (token != null) {
     if (token.name == "") {
@@ -86,8 +74,11 @@ export function handleTransfer(event: Transfer): void {
 
     let isBurn =
       event.params.to.toHex() == GENESIS_ADDRESS ||
-      event.params.to.toHex() == DEAD_ADDRESS;
-    let isMint = event.params.from.toHex() == GENESIS_ADDRESS;
+      event.params.to.toHex() == DEAD_ADDRESS ||
+      event.params.to.toHex() == OFTV2_ADDRESS;
+    let isMint =
+      event.params.from.toHex() == GENESIS_ADDRESS ||
+      event.params.to.toHex() == OFTV2_ADDRESS;
     let isTransfer = !isBurn && !isMint;
     let isEventProcessed = false;
 
@@ -154,13 +145,7 @@ export function handleTransfer(event: Transfer): void {
 }
 
 export function handleBurn(event: Burn): void {
-  // handle for mainnet
-  let address = event.address.toHex();
-  if (address == "0xa0aa943666b4309c1989e3a7ebe7dbe11de36212") {
-    // ProxyOFT
-    address = "0x9e20461bc2c4c980f62f1b279d71734207a6a356"; // set it to ERC20 to match lz & erc20 metrics
-  }
-  let token = loadToken(address);
+  let token = loadToken(event.address.toHex());
 
   if (token != null) {
     let amount = event.params.value;
@@ -195,13 +180,7 @@ export function handleBurn(event: Burn): void {
 }
 
 export function handleMint(event: Mint): void {
-  // handle for mainnet
-  let address = event.address.toHex();
-  if (address == "0xa0aa943666b4309c1989e3a7ebe7dbe11de36212") {
-    // ProxyOFT
-    address = "0x9e20461bc2c4c980f62f1b279d71734207a6a356"; // set it to ERC20 to match lz & erc20 metrics
-  }
-  let token = loadToken(address);
+  let token = loadToken(event.address.toHex());
 
   if (token != null) {
     let amount = event.params.amount;
@@ -243,6 +222,8 @@ function handleBurnEvent(
 ): boolean {
   // Track total supply/burned
   if (token != null) {
+    // NOTE: This below `totalSupply` check isn't applicable for OmniCat as total supply is fixed in mainnet and dead address is used for burning which doesn't update the total supply. There's no `Burn` event too, so it's ok to remove this check
+    /*
     let totalSupply = ERC20.bind(event.address).try_totalSupply();
     let currentTotalSupply = totalSupply.reverted
       ? token.totalSupply
@@ -252,6 +233,7 @@ function handleBurnEvent(
     if (currentTotalSupply == token.totalSupply) {
       return true;
     }
+    */
 
     let balance = getOrCreateAccountBalance(getOrCreateAccount(burner), token);
     let FromBalanceToZeroNum = BIGINT_ZERO;
@@ -302,6 +284,8 @@ function handleMintEvent(
 ): boolean {
   // Track total token supply/minted
   if (token != null) {
+    // NOTE: This below `totalSupply` check isn't applicable for OmniCat as total supply is fixed in mainnet. There's no `Mint` event too, so it's ok to remove this check
+    /*
     let totalSupply = ERC20.bind(event.address).try_totalSupply();
     let currentTotalSupply = totalSupply.reverted
       ? token.totalSupply
@@ -311,6 +295,7 @@ function handleMintEvent(
     if (currentTotalSupply == token.totalSupply) {
       return true;
     }
+    */
 
     let balance = getOrCreateAccountBalance(
       getOrCreateAccount(destination),
