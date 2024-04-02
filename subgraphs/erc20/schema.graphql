@@ -42,6 +42,21 @@ type Token @entity {
   " Total token minted "
   totalMinted: BigInt!
 
+  " Total number of token bridge in events "
+  lzTotalBridgedInCount: BigInt!
+
+  " Total bridged in "
+  lzTotalBridgedIn: BigInt!
+
+  " Total number of token bridge out events "
+  lzTotalBridgedOutCount: BigInt!
+
+  " Total bridged out "
+  lzTotalBridgedOut: BigInt!
+
+  " List of bridge transfers"
+  lzBridges: [BridgeTransferEvent!]! @derivedFrom(field: "token")
+
   " List of token transfers "
   transfers: [TransferEvent!]! @derivedFrom(field: "token")
 
@@ -95,6 +110,18 @@ type TokenDailySnapshot @entity {
   " Total number of token burnt in a day "
   dailyBurnAmount: BigInt!
 
+  " Total number of token bridge in events in a day"
+  dailyLzTotalBridgedInCount: Int!
+
+  " Total bridged in in a day"
+  dailyLzTotalBridgedIn: BigInt!
+
+  " Total number of token bridge out events in a day"
+  dailyLzTotalBridgedOutCount: Int!
+
+  " Total bridged out in a day"
+  dailyLzTotalBridgedOut: BigInt!
+
   " Block number of this snapshot "
   blockNumber: BigInt!
 
@@ -138,6 +165,18 @@ type TokenHourlySnapshot @entity {
 
   " Total number of token burnt in a hour "
   hourlyBurnAmount: BigInt!
+
+  " Total number of token bridge in events in an hour"
+  hourlyLzTotalBridgedInCount: Int!
+
+  " Total bridged in in an hour"
+  hourlyLzTotalBridgedIn: BigInt!
+
+  " Total number of token bridge out events in an hour"
+  hourlyLzTotalBridgedOutCount: Int!
+
+  " Total bridged out in an hour"
+  hourlyLzTotalBridgedOut: BigInt!
 
   " Block number of this snapshot "
   blockNumber: BigInt!
@@ -211,6 +250,44 @@ type TransferEvent implements Event @entity {
   timestamp: BigInt!
 }
 
+type BridgeTransferEvent @entity {
+  " { Token ID }-{ Transaction hash }-{ Log index } "
+  id: ID!
+
+  " Transaction hash of the transaction that emitted this event "
+  hash: String!
+
+  " Event log index. For transactions that don't emit event, create arbitrary index starting from 0 "
+  logIndex: Int!
+
+  " The token this event belongs to "
+  token: Token!
+
+  " Nonce of the transaction that emitted this event "
+  nonce: Int!
+
+  " Quantity of tokens transferred "
+  amount: BigInt!
+
+  " Layer Zero Source Chain Id "
+  sourceChainId: String
+
+  " Account that sent the tokens "
+  from: Account
+
+  " Layer Zero Destination Chain Id"
+  destinationChainId: String
+
+  " Account that received the tokens "
+  to: Account
+
+  " Block number of this event "
+  blockNumber: BigInt!
+
+  " Timestamp of this event "
+  timestamp: BigInt!
+}
+
 ##################################
 ######## Account MetaData ########
 ##################################
@@ -225,6 +302,12 @@ type Account @entity {
 
   " Token transfers from this account "
   transferFrom: [TransferEvent!]! @derivedFrom(field: "from")
+
+  " Bridge in transfers to this account "
+  bridgeTo: [BridgeTransferEvent!]! @derivedFrom(field: "to")
+
+  " Bridge out transfers from this account "
+  bridgeFrom: [BridgeTransferEvent!]! @derivedFrom(field: "from")
 
   " Token balances that this account holds "
   balances: [AccountBalance!]! @derivedFrom(field: "account")
