@@ -1,13 +1,13 @@
 import { Address, JSONValue, Value, log, ipfs } from "@graphprotocol/graph-ts";
 
 import { Token } from "../../generated/schema";
-import { Unknown as UnknownEvent } from "../../generated/TokenRegistry/TokenRegistry";
+// import { Unknown as UnknownEvent } from "../../generated/TokenRegistry/TokenRegistry";
 
-import {
-  BurnableToken,
-  MintableToken,
-  StandardToken,
-} from "../../generated/templates";
+// import {
+//   BurnableToken,
+//   MintableToken,
+//   StandardToken,
+// } from "../../generated";
 
 import {
   REGISTRY_HASH,
@@ -15,13 +15,13 @@ import {
   BIGINT_ZERO,
 } from "../common/constants";
 
-export function initTokenList(event: UnknownEvent): void {
-  log.debug("Initializing token registry, block={}", [
-    event.block.number.toString(),
-  ]);
+// export function initTokenList(event: UnknownEvent): void {
+//   log.debug("Initializing token registry, block={}", [
+//     event.block.number.toString(),
+//   ]);
 
-  ipfs.mapJSON(REGISTRY_HASH, "createToken", Value.fromString(""));
-}
+//   ipfs.mapJSON(REGISTRY_HASH, "createToken", Value.fromString(""));
+// }
 
 export function createToken(value: JSONValue, userData: Value): void {
   let rawData = value.toArray();
@@ -48,6 +48,10 @@ export function createToken(value: JSONValue, userData: Value): void {
       token.totalSupply = BIGINT_ZERO;
       token.totalBurned = BIGINT_ZERO;
       token.totalMinted = BIGINT_ZERO;
+      token.lzTotalBridgedInCount = BIGINT_ZERO;
+      token.lzTotalBridgedIn = BIGINT_ZERO;
+      token.lzTotalBridgedOutCount = BIGINT_ZERO;
+      token.lzTotalBridgedOut = BIGINT_ZERO;
 
       log.debug("Adding token to registry, symbol: {}, address: {}", [
         token.symbol,
@@ -57,9 +61,9 @@ export function createToken(value: JSONValue, userData: Value): void {
       token.save();
 
       // Start indexing token events
-      StandardToken.create(contractAddress);
-      BurnableToken.create(contractAddress);
-      MintableToken.create(contractAddress);
+      // StandardToken.create(contractAddress);
+      // BurnableToken.create(contractAddress);
+      // MintableToken.create(contractAddress);
     } else {
       log.warning("Token {} already in registry", [contractAddress.toHex()]);
     }
